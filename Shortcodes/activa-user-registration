@@ -1,0 +1,46 @@
+<?php
+/**
+ * 
+ * Plugin Name:  Activa user registration plugin
+ * Description: A simple plugin to get user data and store it in database
+ * Version: 1.0
+ * Author: Utsav
+ * Author URI:  https://github.com/Paranoia88
+ * Text Domain: menu-plugin
+ */
+
+class activaplugin{
+    public function __construct(){
+        $this->init();
+    }
+    public function init(){
+        //must use array ($this) if called at the time of instantiation
+        add_shortcode('ac_custom_template', array( $this ,'ac_custom_template_function' ));
+    }
+    
+    function ac_custom_template_function($atts) {
+        // error_log(print_r('Hello'));
+        // Parse shortcode attributes
+        $atts = shortcode_atts(array(
+            'redirect_after_registration' => ''
+        ), $atts);
+    
+        ob_start(); // Start output buffering
+    
+       
+        // Include the template file
+        $file = ABSPATH."wp-content/plugins/activa-user-registration/shortcode-form-template.php";
+
+        include_once($file);
+    
+        // Redirect after registration, if provided
+         // Check if the form is submitted
+   
+        return ob_get_clean(); // Return the buffered content
+    }
+    
+}
+$activateplugin = new activaplugin();
+
+?>
+
