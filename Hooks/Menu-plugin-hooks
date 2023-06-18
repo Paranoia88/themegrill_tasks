@@ -7,6 +7,7 @@
  * Author: Utsav
  * Author URI:  https://github.com/Paranoia88
  * Text Domain: menu-plugin
+ * Need to integrate wp_mail plugin to create a mail system
  */
 
 if (!defined('ABSPATH')) {
@@ -24,15 +25,14 @@ class EmailPlugin{
         add_action( 'admin_menu', array($this, 'my_plugin_menu'));
          //HOoked into admin_init for settings that are saved after subbmitted
         add_action( 'admin_init', array($this, 'savesetting') );
-        // add_action('response_msg', array($this, 'EmailFilter'), 11, 1);
         add_filter('email_message_updates', array($this, 'EmailFilter'), 10, 1);
-        add_action('mp_send_email', array($this, 'sendMyemail'), 10, 3);
+        add_action('mp_send_email', array($this, 'sendMyemail'), 10, 1);
     }
 
 
        //for adding a menu and submenu
       public function my_plugin_menu() {
-    add_menu_page(
+        add_menu_page(
         'Test Email',
         'Test Email',
         'manage_options',
@@ -87,9 +87,6 @@ class EmailPlugin{
                 </div>
                 <input type="submit" name="submit" value="Submit">
 
-                <?php 
-                $avalue = array("Thank you for visiting.");
-                do_action('response_msg', $avalue);?>
             </form>
         </div>
   <?php
@@ -101,50 +98,87 @@ class EmailPlugin{
    {
     //if submit has value 1
     if (isset($_POST['submit'])) {
-        $emailSubject
-            = apply_filters('email_message_updates', sanitize_text_field($_POST['email-subject']));
-        $emailContent =
-            apply_filters('email_message_updates', sanitize_textarea_field($_POST['email-content']));
-        $emailSendto =
-            apply_filters('email_message_updates', sanitize_text_field( $_POST['send-to'] ));
-
+        $emailSubject = sanitize_text_field($_POST['email-subject']);
+        $emailContent = sanitize_text_field($_POST['email-content']);
+        $emailSendto = sanitize_text_field($_POST['send-to']);
+        $emailtotal = array($emailSubject, $emailContent, $emailSendto);
        
+        
+        $emailContents = apply_filters('email_message_updates', sanitize_text_field($emailtotal));
+        
+              
         // echo '<br><br>';
         // echo $emailContent;
         // echo '<br><br>';
         // echo $emailSendto;
-        do_action('mp_send_email', $emailSubject, $emailContent, $emailSendto);
+        //print_r($emailContents);
+        
+        do_action('mp_send_email', $emailtotal);
+        
     }
 
     }
 
     
-    public function EmailFilter( $content)
+    public function EmailFilter($content)
     {
         //Content that can be overwrited through filter hook. Emailfilter is inside array so that it passes without an error
-        // $content = 'Thank you for visiting.';
+        $content = 'Thank you for visiting.';
         return $content;
     }
 
-    public function EmailAction(){
+    public function sendMyEmail($emailtotal)
+    {   
+        //intialize a count and create a count variable
+        $count = count($emailtotal);
+        
+      
+        for($i = 0;$i < $count;$i++){
+            $emailinfoloop = $emailtotal[$i];
+            if($i == 0){
+                $emailSubject = $emailinfoloop;
+            }
+            elseif($i == 1){
+                $emailContent = $emailinfoloop;
+            }
+            elseif($i == 2){
+                $emailSendto = $emaiinfoloop;
+            }
+        }
 
-    }
-    
-    public function sendMyEmail($emailSubject, $emailContent, $emailTo)
-    {
-        //Sending mail to clients( Need proper setup config for this)
-       
         wp_mail(
             $emailTo,
             $emailSubject,
             $emailContent
         );
+       
+        $is_email_sent = false;
+
+        // Hook into the wp_mail_failed filter
+        add_filter('wp_mail_failed', 'my_mail_failed_handler');
+        
+        function my_mail_failed_handler($wp_error) {
+            // Perform error handling logic here
+            // You can access the error details through the $wp_error object
+            $is_email_sent = false;
+        }
+        
+        // Check the status of the email
+        if ($is_email_sent) {
+            error_log(print_r("Email sent successfully"));
+            // Email sent successfully
+            // Add your success logic here
+        } else {
+            error_log(print_r("Email sent failed"));
+            // Email sending failed
+            // Add your failure logic here
+        }
+        
+        
         
     }
-    // public function func_response_msg(){
-        
-    // }
 }
 
 //Instanciating an object from class EMailPlugin.
 $emailPlugin = new EmailPlugin();
+
