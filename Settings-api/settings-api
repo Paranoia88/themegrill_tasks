@@ -1,0 +1,107 @@
+<?php
+/**
+ * 
+ * Plugin Name: Settings Menu Plugin
+ * Description: A simple plugin to display Menu and submenu.
+ * Version: 1.0
+ * Author: Utsav
+ * Author URI:  https://github.com/Paranoia88
+ * Text Domain: menu-plugin
+ */
+
+ if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly.
+}
+class SettingsApi{   
+    public function __construct(){
+        add_action( 'admin_menu', array($this, 'my_plugin_menu'));
+    }
+    
+       //for adding a menu and submenu
+    public function my_plugin_menu() {
+        
+    add_menu_page(
+        'Movie options',
+        'Movie',
+        'manage_options',
+        'movie-watch',
+        array($this,'call_for_movie'),
+        'dashicons-admin-plugins',
+        6
+    );
+  
+
+    add_submenu_page(
+        'movie-watch',
+        'Dashboard options',
+        'Dashboard',
+        'manage_options',
+        'dashboard-view',
+        array($this,'call_for_dashboard'),
+    );
+    add_submenu_page(
+        'movie-watch',
+        'Settings options',
+        'Settings',
+        'manage_options',
+        'settings-edit',
+        array($this,'call_for_settings'),
+    );
+    
+    }
+    public function call_for_movie(){
+        
+    }
+    public function call_for_dashboard(){
+
+    }
+    public function call_for_settings(){
+       
+        
+    }
+
+     // Register the settings and options group
+     add_action( 'admin_init', 'movie_register_settings' );
+
+     function movie_register_settings() {
+         register_setting('movie_settings', 'movie_input');
+         register_setting('movie_settings', 'movie_radio');
+         register_setting('movie_settings', 'movie_checkbox');
+         register_setting('movie_settings', 'movie_textarea');
+         register_setting('movie_settings', 'movie_dropdown');
+        
+             // Add a settings section
+             add_settings_section(
+                 'my-settings-section',          // Section ID
+                 'Settings section',          // Section title
+                 'movie_render_settings',   // Callback function to render the section
+                 'my-settings-page'     // Settings page where the section should be added
+             );
+
+                 // Register a settings field
+                 add_settings_field(
+                     'movie_input_field',             // Field ID
+                     'Input Field',             // Field label
+                     'prefix_field_cb',      // Callback function to render the field
+                     'movie-watch',     // Settings page where the field should be added
+                     'my-settings-section'            // Section ID where the field should be placed
+                 );
+             
+                 function prefix_field_cb() {
+                     // Callback function to render the field
+                     echo '<input type="text" name="my-plugin-options[my-field]" value="' . esc_attr( get_option( 'my-plugin-options' )['my-field'] ) . '">';
+                 }
+                 
+     }
+
+    
+            
+  
+
+        
+    }
+      //Hooked into admin_menu to create menu and submenu page
+
+
+$adminmenu = new SettingsApi();
+
